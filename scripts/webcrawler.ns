@@ -1,0 +1,46 @@
+/** @param {NS} ns **/
+
+function _pwnString(ns, canHack, target) {
+	return ns.sprintf("%s%s", canHack ? "y" : "n", ns.hasRootAccess(target) ? "*" : " ");
+}
+
+async function crawl(ns, target, visited=[], depth=0, maxDepth=10) {
+	var near = ns.scan(target, true);
+	// ns.print(near);
+	var myLevel = ns.getHackingLevel();
+	for (var index in near) {
+		var current = near[index];
+		if (visited.includes(current)) {
+			// ns.tprint("Skipping "+current);
+			continue;
+		}
+
+		var servLevel = ns.getServerRequiredHackingLevel(current);
+		var canHack = myLevel >= servLevel;
+		ns.tprintf("%s[%s] (%3d) %s", "\t".repeat(depth), _pwnString(ns, canHack, current), servLevel, current);
+		visited.push(current);
+
+		// if(depth < maxDepth) {
+		if (canHack) {
+			if (!ns.hasRootAccess(current)) //ns.print("Target: " + current);
+				await ns.write("targets.txt", current + "\n", "a");
+			await crawl(ns, current, visited, depth+1);
+			// ns.tprintf("^ recurse");
+		}
+	}
+	return visited;
+}
+
+export async function main(ns) {
+	// ns.tail();
+	// ns.disableLog("ALL");
+	var target = ns.args[0] == undefined ? ns.getHostname() : ns.args[0];
+	ns.tprintf("\n\nWEBCRAWLER -> START @ %s", target);
+
+	ns.print(await crawl(ns, target, [target]));
+	if (ns.fileExists("targets.txt", "home",)) {
+		ns.tprint("Targets Found:");
+		ns.tprint(ns.read("targets.txt"));
+		ns.rm("targets.txt", "home");
+	}
+}

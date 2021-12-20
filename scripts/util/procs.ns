@@ -1,0 +1,27 @@
+/** @param {NS} ns
+ *  @param {number} ramLimit Somethings else
+ *  Some comment
+ * **/
+function ramLimitMaxThreads(ns, ramLimit, nameScript) {
+    var memCost = ns.getScriptRam(nameScript);
+    return Math.floor(ramLimit/memCost);
+}
+
+/** @param {NS} ns
+ *  @param {number} ramLimit Allocated amount of RAM in Gb
+ *  @param {string} nameScript Full name of the script to call
+ * **/
+async function ramLimitRun(ns, ramLimit, nameScript, ...args) {
+    ns.run(nameScript, ramLimitMaxThreads(ns, ramLimit, nameScript), ...args);
+}
+
+/** @param {NS} ns **/
+export async function main(ns) {
+    ns.tail();
+    ns.print(ns.hackAnalyzeThreads("n00dles", 1000000)); //Number of threads needed to gain X money on a success
+    ns.print(ns.hackAnalyze("n00dles"));
+    ns.print(ns.weakenAnalyze(1));
+
+    await ramLimitRun(ns, 7, "/util/leech.ns", "n00dles");
+
+}

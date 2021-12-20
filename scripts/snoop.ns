@@ -1,0 +1,29 @@
+import {formatMoney} from "/util/format.ns";
+
+/** @param {NS} ns **/
+
+export async function main(ns) {
+    var target = ns.args[0];
+    ns.disableLog("ALL");
+    // ns.tail();
+    // ns.clearLog();
+    if (!ns.serverExists(target)) {
+        ns.print("ERROR: '" + target + " is not a server!");
+    }
+    // ns.print(ns.formulas.hacking);
+
+
+    var output = ns.sprintf("[%s]\n%s / %s RAM: %.2f\n",
+        target,
+        formatMoney(ns, ns.getServerMoneyAvailable(target)),
+        formatMoney(ns, ns.getServerMaxMoney(target)),
+        ns.getServerMaxRam(target)
+    );
+    output += ns.sprintf("Requires Hacking LVL: %d\nSecurity: %.2f (Min %d)",
+        ns.getServerRequiredHackingLevel(target),
+        ns.getServerSecurityLevel(target),
+        ns.getServerMinSecurityLevel(target)
+    );
+
+    ns.tprint(output);
+}

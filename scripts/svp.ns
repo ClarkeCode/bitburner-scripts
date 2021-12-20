@@ -1,0 +1,19 @@
+/** @param {NS} ns **/
+import {formatAction, formatPercent, formatMoney} from "/util/format.ns";
+
+export function largestPurchasableServer(ns) {
+	var money = ns.getPlayer().money;
+	var gigs = 2**20;
+	while (money < ns.getPurchasedServerCost(gigs) && gigs != 2) { gigs /= 2; }
+	return gigs;
+}
+
+export async function main(ns) {
+    
+
+
+
+	ns.tail();
+
+	ns.print(largestPurchasableServer(ns));
+}

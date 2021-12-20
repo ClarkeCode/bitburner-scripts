@@ -1,0 +1,15 @@
+/** @param {NS} ns **/
+export async function main(ns) {
+	if (ns.args[0] == undefined || !ns.serverExists(ns.args[0])) {
+		ns.tprint("ERROR: '"+ns.args[0]+"' is not a valid server");
+		return;
+	}
+	var target = ns.args[0];
+	var programs = ns.ls("home", "util");
+	programs.push(["basic.ns", "councilor.ns", "bootstrap.ns", "jackercrack.ns", "survey.ns", "find.ns"]);
+
+	// ns.tail();
+    ns.run("/util/crack.ns", 1, target);
+	ns.run("/util/setup-server.ns", 1, target, JSON.stringify(programs));
+	// ns.run("councilor.ns", 1, target);
+}

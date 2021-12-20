@@ -1,0 +1,31 @@
+function maxThreads(ns, host, targetScript) {
+	return Math.floor(ns.getServerMaxRam(host) / ns.getScriptRam(targetScript));
+}
+
+/** @param {NS} ns **/
+export async function main(ns) {
+	// ns.tail();
+	var host = ns.getHostname();
+	var target = ns.args[0] == undefined ? host : ns.args[0];
+
+	if (ns.args[1] == undefined) {
+		var threadBoot = maxThreads(ns, host, "bootstrap.ns");
+		ns.spawn("bootstrap.ns", threadBoot, target, threadBoot);
+	}
+
+	if (!ns.hasRootAccess(target)) {
+		ns.tprint("ERROR: Must get root access on '"+target+"'");
+	}
+
+	var threshold = 2; //percentage
+	var servPercent;
+	while (ns.getServerSecurityLevel(target) < 10 &&
+			(servPercent = 100*ns.getServerMoneyAvailable(target)/ns.getServerMaxMoney(target)) > threshold &&
+			ns.getServerMoneyAvailable(target) != 0) {
+		ns.print(servPercent);
+		await ns.hack(target);
+	}
+	var threadBasic = maxThreads(ns, host, "basic.ns");
+	ns.toast(ns.sprintf("[%s] Done bootstrapping", host));
+	ns.spawn("basic.ns", threadBasic, target);
+}
