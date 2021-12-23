@@ -1,5 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-    ns.tail();
-    ns.print("two");
+    // ns.tail();
+    await ns.sleep(2000);
+    ns.tprint("two");
 }

@@ -6,7 +6,7 @@ export function retrieveServer(target, servers) {
 }
 
 /** @param {NS} ns **/
-export async function survey(ns, target="home", visited=[], depth=0, maxDepth=7) {
+export async function survey(ns, target="home", visited=[], depth=0, maxDepth=30) {
 	var sTarget = ns.getServer(target);
 	var canHack = ns.getHackingLevel() >= sTarget.hackDifficulty;
 
@@ -33,7 +33,8 @@ export async function main(ns) {
 	await survey(ns, target, visited);
 	
 	visited.sort((a, b) => {return b.requiredHackingSkill - a.requiredHackingSkill;});
-	for (var s of visited.filter(serv => serv.requiredHackingSkill <= ns.getHackingLevel())) {
+	for (var s of visited//visited.filter(serv => serv.requiredHackingSkill <= ns.getHackingLevel())
+	) {
 		ns.print(s.hostname + " " + s.requiredHackingSkill);
 	}
 	// ns.print(visited.map(serv => serv.hostname));

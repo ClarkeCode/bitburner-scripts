@@ -25,5 +25,10 @@ export async function main(ns) {
         ns.getServerMinSecurityLevel(target)
     );
 
+    output += "Connected to:\n"
+    for (var hn of ns.scan(target)) {
+        output += ns.sprintf("%s\n", hn);
+    }
+
     ns.tprint(output);
 }

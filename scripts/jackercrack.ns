@@ -6,10 +6,12 @@ export async function main(ns) {
 	}
 	var target = ns.args[0];
 	var programs = ns.ls("home", "util");
-	programs.push(["basic.ns", "councilor.ns", "bootstrap.ns", "jackercrack.ns", "survey.ns", "find.ns"]);
+	programs.push(["intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns", "survey.ns", "find.ns"]);
 
 	// ns.tail();
     ns.run("/util/crack.ns", 1, target);
+	await ns.sleep(300);
 	ns.run("/util/setup-server.ns", 1, target, JSON.stringify(programs));
+	await ns.sleep(300);
 	// ns.run("councilor.ns", 1, target);
 }

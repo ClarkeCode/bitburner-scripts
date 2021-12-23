@@ -1,4 +1,23 @@
+export function largestPurchasableServer(ns) {
+	var money = ns.getPlayer().money;
+	var gigs = 2**20;
+	while (money < ns.getPurchasedServerCost(gigs) && gigs != 2) { gigs /= 2; }
+	return gigs;
+}
+
 /** @param {NS} ns **/
 export async function main(ns) {
-    ns.tprint(ns.purchaseServer(ns.args[0], ns.args[1]));
+    var hostname = ns.args[0];
+    var desiredRAM = ns.args[1];
+    if (desiredRAM == undefined) {
+        desiredRAM = largestPurchasableServer(ns);
+    }
+    var doPurchase = await ns.prompt(ns.sprintf("Do you want to by a server '%s' with %d GB of RAM?", hostname, desiredRAM));
+    if (doPurchase) {
+        ns.tprint(ns.purchaseServer(hostname, desiredRAM));
+        ns.tprint("INFO - Purchased " + hostname);
+    }
+    else {
+        ns.tprint("INFO - Declined purchase");
+    }
 }

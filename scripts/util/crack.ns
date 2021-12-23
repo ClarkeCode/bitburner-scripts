@@ -22,6 +22,16 @@ function defuse(ns, target) {
 	if (ns.fileExists("SQLInject.exe", "home")) { ns.sqlinject(target); }
 }
 
+/**
+ * @param {NS} ns
+ * @param {Server} targetServer
+ */
+export function crack(ns, targetServer) {
+	defuse(ns, targetServer.hostname);
+	if (targetServer.numOpenPortsRequired <= targetServer.openPortCount) {ns.nuke(targetServer.hostname);}
+	return ns.hasRootAccess(targetServer.hostname);
+}
+
 export async function main(ns) {
 	// ns.tail();
 	var target = ns.args[0];
