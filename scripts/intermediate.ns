@@ -89,7 +89,7 @@ export async function main(ns) {
 			}
 		}
 
-		ns.print(ns.sprintf("[%s] %s/%s (%.2f/%d)", target,
+		ns.print(ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
 			formatMoney(ns, ns.getServerMoneyAvailable(target)), formatMoney(ns, ns.getServerMaxMoney(target)),
 			ns.getServerSecurityLevel(target), ns.getServerMinSecurityLevel(target)
 		));

@@ -36,6 +36,22 @@ export function linksBetween(origin, destination, servers) {
 	return fullPath.reverse();
 }
 
+export async function findLinksToServer(ns, host, target) {
+	if (target == undefined || !ns.serverExists(target)) {
+		ns.tprint("ERROR: '"+target+"' is not a server");
+	}
+
+    var servers = [];
+	await survey(ns, "home", servers);
+	// ns.print(servers);
+
+	var links = [];
+	for (var link of linksBetween(host, target, servers)) {
+		links.push(link);
+	}
+	return links;
+}
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	// ns.tail();
@@ -50,7 +66,8 @@ export async function main(ns) {
 	await survey(ns, "home", servers);
 	// ns.print(servers);
 
-	for (var link of linksBetween(host, target, servers)) {
+	
+	for (var link of await findLinksToServer(ns, host, target)) {
 		ns.tprint(link);
 	}
 }

@@ -23,6 +23,12 @@ export async function survey(ns, target="home", visited=[], depth=0, maxDepth=30
 	}
 }
 
+export async function allServers(ns) {
+	var visited = [];
+	await survey(ns, "home", visited);
+	return visited;
+}
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	ns.tail();

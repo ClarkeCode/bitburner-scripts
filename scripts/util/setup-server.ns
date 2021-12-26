@@ -1,7 +1,10 @@
 /** @param {NS} ns **/
 export async function main(ns) {
+
+    var programs = ns.ls("home", "util");
+	programs.push(["intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns",
+    "survey.ns", "goto.ns"]);
     
-    var programs = JSON.parse(ns.args[1]);
     ns.tprint(programs);
     await ns.scp(programs, "home", ns.args[0]);
 }

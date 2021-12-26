@@ -1,3 +1,5 @@
+import { formatMoney } from "/util/format.ns";
+
 export function largestPurchasableServer(ns) {
 	var money = ns.getPlayer().money;
 	var gigs = 2**20;
@@ -12,7 +14,11 @@ export async function main(ns) {
     if (desiredRAM == undefined) {
         desiredRAM = largestPurchasableServer(ns);
     }
-    var doPurchase = await ns.prompt(ns.sprintf("Do you want to by a server '%s' with %d GB of RAM?", hostname, desiredRAM));
+    else if (desiredRAM % 2 != 0) {ns.tprint("ERROR: Server memory must be factorable by 2"); return; }
+    var doPurchase = await ns.prompt(ns.sprintf("Do you want to by a server '%s' with %d GB of RAM?\n\
+    Will cost %s, next size at %s", hostname, desiredRAM,
+    formatMoney(ns, ns.getPurchasedServerCost(desiredRAM)), formatMoney(ns, ns.getPurchasedServerCost(desiredRAM*2))));
+    
     if (doPurchase) {
         ns.tprint(ns.purchaseServer(hostname, desiredRAM));
         ns.tprint("INFO - Purchased " + hostname);

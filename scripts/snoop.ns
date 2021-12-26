@@ -24,10 +24,12 @@ export async function main(ns) {
         ns.getServerSecurityLevel(target),
         ns.getServerMinSecurityLevel(target)
     );
-
-    output += "Connected to:\n"
-    for (var hn of ns.scan(target)) {
-        output += ns.sprintf("%s\n", hn);
+    
+    if (ns.args.includes("scan")) {
+        output += "\n\nConnected to:\n";
+        for (var hn of ns.scan(target)) {
+            output += ns.sprintf("%s\n", hn);
+        }
     }
 
     ns.tprint(output);
