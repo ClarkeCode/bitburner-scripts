@@ -22,6 +22,7 @@ export async function main(ns) {
     if (doPurchase) {
         ns.tprint(ns.purchaseServer(hostname, desiredRAM));
         ns.tprint("INFO - Purchased " + hostname);
+        ns.spawn("/util/setup-server.ns", 1, hostname);
     }
     else {
         ns.tprint("INFO - Declined purchase");

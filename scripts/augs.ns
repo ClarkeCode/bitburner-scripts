@@ -1,7 +1,12 @@
 import { formatMoney } from "/util/format.ns";
 
-const allFactionNames = ["CyberSec", "NiteSec",	//Progression Factions
-				"Tian Di Hui", "Chongqing", "New Tokyo"];	//Location Factions
+const allFactionNames = ["CyberSec", "NiteSec", "The Black Hand", "BitRunners",	//Progression Factions
+				"Sector-12", "Aevum", "Volhaven", "Tian Di Hui", "Chongqing", "New Tokyo", "Ishima", //Location Factions
+				"Slum Snakes", "Tetrads" //Crime Factions
+				];
+
+// Aug price multiplier is 1.9 ^ (# of purchased augmentations)
+const multi = [1.0, 1.9, 3.610, 6.859, 13.032, 24.761, 47.046]; 
 
 /** @param {NS} ns */
 function aaa(ns, name, faction) {

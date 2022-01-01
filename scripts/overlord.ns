@@ -1,0 +1,93 @@
+import { threadsToHackUntilPercent, threadsToRefillServer, threadsToMinSecurity} from "/util/util.ns";
+import { formatMoney } from "/util/format.ns";
+import { allServers } from "./survey.ns";
+
+/** 
+ * @param {NS} ns
+ * @param {Array.<string>} botnetArr
+ * @param {string} target
+ * @param {string} script Name of the script that should be dispatched
+ * @param {number} desiredThreads
+ * @param {boolean} noisy Should the function print to the logs
+ * @remark Attempt to execute a given script & threadcount across the provided array of servers
+ **/
+function scriptRouter(ns, botnetArr, target, script, desiredThreads, noisy=false) {
+	var scriptCost = ns.getScriptRam(script);
+	var requestedThreads = desiredThreads;
+	var createdPids = [];
+
+	// if (noisy) {ns.print(ns.sprintf("%s:", script));}
+	for (var serv of botnetArr) {
+		var availableThreads = Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/scriptCost);
+		if (availableThreads < 1) continue; //Server is busy
+		if (requestedThreads < 1) break; //Job is done
+
+		var threadsToExec = 0;
+		{
+			if (availableThreads > requestedThreads) { threadsToExec = requestedThreads; requestedThreads = 0; }
+			else { threadsToExec = availableThreads; requestedThreads -= availableThreads; }
+		}
+
+		if (threadsToExec != 0) {
+			var pid = ns.exec(script, serv, threadsToExec, target);
+			createdPids.push(pid);
+			if (noisy && pid != 0) {ns.print(ns.sprintf("- %-18s x%-3d [%s]", script, threadsToExec, serv));}
+		}
+	}
+	
+	return { success: requestedThreads <= 0, pids: createdPids };
+}
+
+const leech     = "/util/leech.ns";
+const crippler  = "/util/crippler.ns";
+const flowerpot = "/util/flowerpot.ns";
+
+/** @param {NS} ns **/
+export async function main(ns) {
+	ns.tail();
+	ns.disableLog("ALL");
+
+	
+	var target = ns.args[0];
+	var botnet = (await allServers(ns)).filter(serv => (serv.requiredHackingSkill <= ns.getHackingLevel()) ).map(serv => serv.hostname);
+	// ns.getServer().requiredHackingSkill
+
+	var createdPids = [];
+	
+	// var lastHack = ns.getTimeSinceLastAug();
+	var lastWeak = ns.getTimeSinceLastAug();
+	// var lastGrow = ns.getTimeSinceLastAug();
+
+	var lastPrinted = undefined;
+	var noisy = true;
+	var desiredPercentageToHack = 0.65;
+	
+
+	while (true) {
+		var time = ns.getTimeSinceLastAug();
+
+		if (threadsToMinSecurity(ns, target) > 10 /*&& time >= lastWeak*/) {
+			var report = scriptRouter(ns, botnet, target, crippler, threadsToMinSecurity(ns, target), noisy);
+			if (report.success) { //Able to dispatch all necessary weakening
+				lastWeak = ns.getTimeSinceLastAug() + ns.getWeakenTime(target) + 1000;
+			}
+		}
+		scriptRouter(ns, botnet, target, flowerpot, threadsToRefillServer(ns, target), noisy);
+
+		var remainingHackablePercentage = (ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target)) - desiredPercentageToHack;
+		remainingHackablePercentage = remainingHackablePercentage <= 0 ? 0 : remainingHackablePercentage;
+		// ns.tprint(remainingHackablePercentage);
+		scriptRouter(ns, botnet, target, leech, threadsToHackUntilPercent(ns, target, remainingHackablePercentage), noisy);
+
+		await ns.sleep(1750);
+		var line = ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
+			formatMoney(ns, ns.getServerMoneyAvailable(target)), formatMoney(ns, ns.getServerMaxMoney(target)),
+			ns.getServerSecurityLevel(target), ns.getServerMinSecurityLevel(target)
+		);
+		
+		if (lastPrinted != line) {
+			lastPrinted = line;
+			ns.print(lastPrinted);
+		}
+	}
+}

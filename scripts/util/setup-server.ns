@@ -1,10 +1,16 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-
+    var target = ns.args[0];
     var programs = ns.ls("home", "util");
-	programs.push(["intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns",
-    "survey.ns", "goto.ns"]);
+	programs.push("intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns",
+    "survey.ns", "goto.ns", "overlord.ns", "webcrawler.ns");
     
-    ns.tprint(programs);
-    await ns.scp(programs, "home", ns.args[0]);
+    var copied = (await ns.scp(programs, "home", target));
+    // ns.tprint(copied);
+    var copied = true;
+    ns.toast(ns.sprintf(
+            "Server '%s' was %s set up",
+            target, (copied ? "" : "not ")
+        ), 
+        copied ? "success" : "error", 3000);
 }

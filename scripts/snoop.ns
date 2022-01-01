@@ -19,6 +19,7 @@ export async function main(ns) {
         formatMoney(ns, ns.getServerMaxMoney(target)),
         ns.getServerMaxRam(target)
     );
+    output += ns.sprintf("Backdoor: %s\n", ns.getServer(target).backdoorInstalled ? "YES" : "NO"); //Comment to lower by 2GB
     output += ns.sprintf("Requires Hacking LVL: %d\nSecurity: %.2f (Min %d)",
         ns.getServerRequiredHackingLevel(target),
         ns.getServerSecurityLevel(target),

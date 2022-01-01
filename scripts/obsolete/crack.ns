@@ -1,19 +1,4 @@
 /** @param {NS} ns **/
-
-export async function report(ns, fname, target) {
-	// ns.read();
-	ns.print(fname, ":");
-	var ct = [];
-	if (ns.fileExists(fname, "home",)) {
-		ct = JSON.parse(ns.read(fname));
-	}
-	if (!ct.includes(target)) {
-		ct.push(target);
-	}
-	ns.print(ct);
-	await ns.write(fname, JSON.stringify(ct), "w");
-}
-
 function defuse(ns, target) {
 	if (ns.fileExists("BruteSSH.exe", "home")) { ns.brutessh(target); }
 	if (ns.fileExists("FTPCrack.exe", "home")) { ns.ftpcrack(target); }
@@ -26,9 +11,10 @@ function defuse(ns, target) {
  * @param {NS} ns
  * @param {Server} targetServer
  */
-export function crack(ns, targetServer) {
+export async function crack(ns, targetServer) {
 	defuse(ns, targetServer.hostname);
 	if (targetServer.numOpenPortsRequired <= targetServer.openPortCount) {ns.nuke(targetServer.hostname);}
+	await ns.sleep(500);
 	return ns.hasRootAccess(targetServer.hostname);
 }
 
@@ -36,21 +22,11 @@ export async function main(ns) {
 	// ns.tail();
 	var target = ns.args[0];
 	
-	defuse(ns, target);
+	// defuse(ns, target);
 
 	var tserv = ns.getServer(target);
+	var gotRoot = await crack(ns, tserv);
 
-	if (tserv.numOpenPortsRequired <= tserv.openPortCount)
-		ns.nuke(target);
-	else
-		ns.tprint("Cannot nuke");
-
-	if (ns.hasRootAccess(target)) {
-		await report(ns, "rooted.txt", target);
-		ns.tprint("Got root");
-	}
-	if (ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(target)) {
-		await report(ns, "hackable.txt", target);
-		ns.tprint("Can hack");
-	}
+	if (gotRoot) { ns.tprint("Got root"); }
+	else { ns.tprint("ERROR: could not crack"); }
 }

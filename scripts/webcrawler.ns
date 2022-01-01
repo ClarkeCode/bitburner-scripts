@@ -1,5 +1,6 @@
-/** @param {NS} ns **/
+import { allServers } from "./survey.ns";
 
+/** @param {NS} ns **/
 function _pwnString(ns, canHack, target) {
 	return ns.sprintf("%s%s", canHack ? "y" : "n", ns.hasRootAccess(target) ? "*" : " ");
 }
@@ -31,7 +32,27 @@ async function crawl(ns, target, visited=[], depth=0, maxDepth=10) {
 	return visited;
 }
 
+/** @param {NS} ns **/
 export async function main(ns) {
+	// ns.tail();
+	// ns.disableLog("ALL");
+	var target = ns.args[0] == undefined ? ns.getHostname() : ns.args[0];
+	ns.tprintf("\n\nWEBCRAWLER -> START @ %s", target);
+
+	var servers = (await allServers(ns)).sort((a, b) => a.requiredHackingSkill - b.requiredHackingSkill);
+	// ns.getServer().requiredHackingSkill
+	for (var serv of servers) {
+		if (serv.requiredHackingSkill < ns.getHackingLevel()+100) 
+		ns.tprintf("[%s] (%3d) %s",
+			_pwnString(ns, serv.requiredHackingSkill <= ns.getHackingLevel(), serv.hostname),
+			ns.getServerRequiredHackingLevel(serv.hostname),
+			serv.hostname
+		);
+	}
+	
+}
+
+export async function main2(ns) {
 	// ns.tail();
 	// ns.disableLog("ALL");
 	var target = ns.args[0] == undefined ? ns.getHostname() : ns.args[0];
