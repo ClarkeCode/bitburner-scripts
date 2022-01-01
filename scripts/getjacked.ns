@@ -1,0 +1,25 @@
+/** @param {NS} ns **/
+function gotoGym(ns, gym) {
+	// ns.travelToCity()
+	// ns.gymWorkout(gym,)
+}
+
+/** @param {NS} ns **/
+function lowestStat(ns) {
+	var player = ns.getPlayer();
+	// var strxp = player.strength
+	var lowestCombatStat = Math.min(player.strength, player.defense, player.dexterity, player.agility);
+	if (player.strength == lowestCombatStat) return "strength";
+	else if (player.defense == lowestCombatStat) return "defense";
+	else if (player.dexterity == lowestCombatStat) return "dexterity";
+	else /*(player.agility == lowestCombatStat)*/ return "agility";
+}
+
+/** @param {NS} ns **/
+export async function main(ns) {
+	// ns.tprint(lowestStat(ns));
+	while (true) {
+		ns.gymWorkout("Powerhouse Gym", lowestStat(ns));
+		await ns.sleep(15000);
+	}
+}
