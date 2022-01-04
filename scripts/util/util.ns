@@ -1,28 +1,31 @@
 /** @param {NS} ns
  *  @param {string} target Hostname of the server to hack
  *  @param {number} threadCount Number of threads with which to hack
+ *  @param {boolean} affectMarket Should this action affect the stock market
  * */
-export async function performHack(ns, target, threadCount) {
-	return await ns.hack(target, {"threads": threadCount});	
+export async function performHack(ns, target, threadCount=1, affectMarket=false) {
+	return ns.hack(target, {"threads": threadCount, "stock": affectMarket});	
 }
 
 /** @param {NS} ns
  *  @param {string} target Hostname of the server to grow
  *  @param {number} threadCount Number of threads with which to grow
+ *  @param {boolean} affectMarket Should this action affect the stock market
  * */
-export async function performGrow(ns, target, threadCount) {
-	return await ns.grow(target, {"threads": threadCount});	
+export async function performGrow(ns, target, threadCount=1, affectMarket=false) {
+	return ns.grow(target, {"threads": threadCount, "stock": affectMarket});	
 }
 
 /** @param {NS} ns
  *  @param {string} target Hostname of the server to weaken
  *  @param {number} threadCount Number of threads with which to weaken
+ *  @param {boolean} affectMarket Should this action affect the stock market
  * */
-export async function performWeaken(ns, target, threadCount) {
-	return await ns.weaken(target, {"threads": threadCount});	
+export async function performWeaken(ns, target, threadCount=1, affectMarket=false) {
+	return ns.weaken(target, {"threads": threadCount, "stock": affectMarket});
 }
 
-/** @param {NS} ns **/
+/** @param {NS} ns */
 function getGrowthMulti(ns, target) {
 	return ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target);
 }
@@ -49,7 +52,8 @@ export function threadsToMinSecurity(ns, target, cores=1.0) {
  *  @param {number} desiredPercent Percentage to hack until eg: 0.5 = 50%
  * **/
 export function threadsToHackUntilPercent(ns, target, desiredPercent) {
-	return Math.ceil(desiredPercent / ns.hackAnalyze(target));
+	var minMoney = ns.getServerMaxMoney(target) * desiredPercent;
+	return Math.ceil(ns.hackAnalyzeThreads(target, ns.getServerMoneyAvailable(target)-minMoney));
 }
 
 /** @param {NS} ns **/

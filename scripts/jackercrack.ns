@@ -53,9 +53,26 @@ export function crack(ns, target) {
 	return canNuke;
 }
 
+import { allServers } from "survey.ns";
+import { setupServer } from "/util/setup-server.ns";
 
 /** @param {NS} ns **/
 export async function main(ns) {
+	ns.tail();
+	while (true) {
+		var servers = (await allServers(ns)).filter(serv => serv.requiredHackingSkill <= ns.getHackingLevel() );
+		for (var serv of servers) {
+			var alreadyCracked = ns.hasRootAccess(serv.hostname);
+			if (crack(ns, serv.hostname)) {
+				await setupServer(ns, serv.hostname, !alreadyCracked);
+			}
+		}
+		await ns.sleep(60 * 1000);
+	}
+}
+
+/** @param {NS} ns **/
+export async function main2(ns) {
 	if (ns.args[0] == undefined || !ns.serverExists(ns.args[0])) {
 		ns.tprint("ERROR: '"+ns.args[0]+"' is not a valid server");
 		return;

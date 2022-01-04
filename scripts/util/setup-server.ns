@@ -1,6 +1,8 @@
-/** @param {NS} ns **/
-export async function main(ns) {
-    var target = ns.args[0];
+/** Copies desired programs to the target server
+ * @param {NS} ns
+ * @param {String} target Hostname of the server
+ */
+export async function setupServer(ns, target, noisy=true) {
     var programs = ns.ls("home", "util");
 	programs.push("intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns",
     "survey.ns", "goto.ns", "overlord.ns", "webcrawler.ns");
@@ -8,9 +10,15 @@ export async function main(ns) {
     var copied = (await ns.scp(programs, "home", target));
     // ns.tprint(copied);
     var copied = true;
-    ns.toast(ns.sprintf(
+    if (noisy) ns.toast(ns.sprintf(
             "Server '%s' was %s set up",
             target, (copied ? "" : "not ")
         ), 
         copied ? "success" : "error", 3000);
+}
+
+/** @param {NS} ns **/
+export async function main(ns) {
+    var target = ns.args[0];
+    await setupServer(ns, target);
 }

@@ -23,6 +23,10 @@ export async function survey(ns, target="home", visited=[], depth=0, maxDepth=30
 	}
 }
 
+/** Gets all servers
+ * @param {NS} ns
+ * @return Server[]
+ */
 export async function allServers(ns) {
 	var visited = [];
 	await survey(ns, "home", visited);

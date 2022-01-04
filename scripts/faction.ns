@@ -38,10 +38,15 @@ export async function main(ns) {
 	// await workUntilHighest(ns, "CyberSec");
 	// await workUntilHighest(ns, "Tian Di Hui");
 	// await workUntilRep(ns, "Chongqing", 37500);
-	await workUntilRep(ns, "Ishima", 7500);
-	await workUntilRep(ns, "Chongqing", 6250);
-	await workUntilRep(ns, "New Tokyo", 6250);
-	await workUntilHighest(ns, "The Black Hand");
-	await workUntilHighest(ns, "BitRunners");
-	ns.workForFaction("CyberSec", "Hacking Contracts", true);
+	// await workUntilRep(ns, "Ishima", 7500);
+	// await workUntilRep(ns, "Chongqing", 6250);
+	// await workUntilRep(ns, "New Tokyo", 6250);
+	// await workUntilHighest(ns, "The Black Hand");
+	// await workUntilHighest(ns, "BitRunners");
+	while (!ns.joinFaction("Daedalus")) {
+		ns.print("Waiting for Daedalus");
+		await ns.sleep(10000);
+	}
+	ns.workForFaction("Daedalus", "Hacking Contracts", true);
+	
 }

@@ -1,8 +1,9 @@
 import { formatMoney } from "/util/format.ns";
 
-const allFactionNames = ["CyberSec", "NiteSec", "The Black Hand", "BitRunners",	//Progression Factions
+const allFactionNames = ["CyberSec", "NiteSec", "The Black Hand", "BitRunners", "Daedalus",	//Progression Factions
 				"Sector-12", "Aevum", "Volhaven", "Tian Di Hui", "Chongqing", "New Tokyo", "Ishima", //Location Factions
-				"Slum Snakes", "Tetrads" //Crime Factions
+				"Slum Snakes", "Tetrads", "The Covenant", //Crime Factions
+				"Netburners", "Illuminati"
 				];
 
 // Aug price multiplier is 1.9 ^ (# of purchased augmentations)
