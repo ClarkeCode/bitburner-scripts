@@ -5,7 +5,7 @@ FULL_FILE="$DESTINATION""$ZIP_NAME"
 
 
 rm -rf ./*.txt
-find . -name "*.ns" -type f -delete
+find . -name "*.js" -type f -delete
 sh ./move-from-downloads.sh
 
 [[ -f "$ZIP_NAME" ]] && mkdir --parents "$DESTINATION" && mv "$ZIP_NAME" $_;

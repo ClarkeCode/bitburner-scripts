@@ -10,5 +10,5 @@ This is a repository for my [Bitburner scripts](https://store.steampowered.com/a
 ## Setup
 * Copy `update.sh` and `move-from-downloads.sh` to the directory where you would like to keep your Bitburner scripts
 * Change **`DL_PATH`** in `move-from-downloads.sh` to match your default download location
-* Download your `.ns` files to your default location with the `download *.ns` command in Bitburner
+* Download your `.js` files to your default location with the `download *.js` command in Bitburner
 * Run `update.sh` - Your files can now be found in the `./scripts` directory
