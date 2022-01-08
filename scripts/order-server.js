@@ -1,4 +1,4 @@
-import { formatMoney } from "/util/format.ns";
+import { formatMoney } from "/util/format.js";
 
 export function largestPurchasableServer(ns) {
 	var money = ns.getPlayer().money;
@@ -22,7 +22,7 @@ export async function main(ns) {
     if (doPurchase) {
         ns.tprint(ns.purchaseServer(hostname, desiredRAM));
         ns.tprint("INFO - Purchased " + hostname);
-        ns.spawn("/util/setup-server.ns", 1, hostname);
+        ns.spawn("/util/setup-server.js", 1, hostname);
     }
     else {
         ns.tprint("INFO - Declined purchase");

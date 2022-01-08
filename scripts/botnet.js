@@ -1,4 +1,4 @@
-import { allServers } from "./survey.ns";
+import { allServers } from "./survey.js";
 
 
 /** @param {NS} ns **/
@@ -7,7 +7,7 @@ export async function main(ns) {
 	var target = ns.args[0];
 	var toRun = ns.args[1];
 	if (target == undefined || !ns.serverExists(target)) { ns.tprint("ERROR: must provide a valid server"); return; }
-	// ns.tprint(ns.getScriptRam("/util/crippler.ns"));
+	// ns.tprint(ns.getScriptRam("/util/crippler.js"));
 
 	var servers = (await allServers(ns)).filter(server => server.hasAdminRights && !server.purchasedByPlayer);
 	for (var server of servers.map(s => s.hostname)) {

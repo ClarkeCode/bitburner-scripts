@@ -1,5 +1,3 @@
-import { performHack } from "/util/util.ns";
-
 /** @param {NS} ns
  *  Arguments are 'target', 'threads'
  *  **/

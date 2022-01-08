@@ -1,4 +1,4 @@
-import { formatMoney } from "/util/format.ns";
+import { formatMoney } from "/util/format.js";
 
 const allFactionNames = ["CyberSec", "NiteSec", "The Black Hand", "BitRunners", "Daedalus",	//Progression Factions
 				"Sector-12", "Aevum", "Volhaven", "Tian Di Hui", "Chongqing", "New Tokyo", "Ishima", //Location Factions

@@ -53,8 +53,8 @@ export function crack(ns, target) {
 	return canNuke;
 }
 
-import { allServers } from "survey.ns";
-import { setupServer } from "/util/setup-server.ns";
+import { allServers } from "survey.js";
+import { setupServer } from "/util/setup-server.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -81,19 +81,19 @@ export async function main2(ns) {
 
 	// ns.tprint(crackLevel(ns));
 	// ns.tail();
-    // ns.run("/util/crack.ns", 1, target);
+    // ns.run("/util/crack.js", 1, target);
 	var isCracked = crack(ns, target);
 	
 	if (isCracked) {
-		ns.run("/util/setup-server.ns", 1, target);
+		ns.run("/util/setup-server.js", 1, target);
 		await ns.sleep(200);
 
-		if (ns.args.includes("bd")) ns.spawn("/util/backdoor.ns", 1, target);
+		if (ns.args.includes("bd")) ns.spawn("/util/backdoor.js", 1, target);
 
 		// try { await ns.installBackdoor(); } catch(err) {}
 	}
 	else {
 		ns.tprintf("ERROR: Cannot nuke '%s', need more programs, current crack level: %d", target, crackLevel(ns));
 	}
-	// ns.run("councilor.ns", 1, target);
+	// ns.run("councilor.js", 1, target);
 }

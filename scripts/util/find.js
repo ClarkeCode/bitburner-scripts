@@ -1,4 +1,4 @@
-import { survey, retrieveServer } from "survey.ns";
+import { survey, retrieveServer } from "survey.js";
 
 /** @param {NS} ns **/
 function linksToHomeOrTarget(current, target, servers) {

@@ -1,4 +1,4 @@
-import { allServers } from "./survey.ns";
+import { allServers } from "./survey.js";
 
 /** @param {NS} ns **/
 function _pwnString(ns, canHack, target) {
@@ -18,7 +18,7 @@ export async function main(ns) {
 	);
 	// ns.getServer().requiredHackingSkill
 	for (var serv of servers) {
-		if (serv.requiredHackingSkill < ns.getHackingLevel()+100) 
+		// if (serv.requiredHackingSkill < ns.getHackingLevel()+100) 
 		ns.tprintf("[%s] (%3d) %s",
 			_pwnString(ns, serv.requiredHackingSkill <= ns.getHackingLevel(), serv.hostname),
 			ns.getServerRequiredHackingLevel(serv.hostname),

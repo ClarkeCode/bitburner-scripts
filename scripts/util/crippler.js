@@ -1,5 +1,3 @@
-import { performWeaken } from "/util/util.ns";
-
 /** @param {NS} ns
  *  Arguments are 'target', 'threads'
  *  **/

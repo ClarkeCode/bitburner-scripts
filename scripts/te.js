@@ -48,6 +48,6 @@ export async function main(ns) {
 	var sc = ns.ps()[0];
 	// ns.tprint(ns.getRunningScript(sc.filename, ns.getHostname(), sc.args));
 	// ns.getScriptExpGain(sc.filename, )
-	ns.tprint(ns.getScriptExpGain("overlord.ns", "home", ...["foodnstuff"]));
+	ns.tprint(ns.getScriptExpGain("overlord.js", "home", ...["foodnstuff"]));
 	ns.tprint(ns.hackAnalyze("ecorp"));
 }

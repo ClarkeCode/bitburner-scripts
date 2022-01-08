@@ -1,4 +1,4 @@
-import { allServers } from "./survey.ns";
+import { allServers } from "./survey.js";
 
 /** @param {NS} ns **/
 async function foreignFiles(ns) {
@@ -7,9 +7,9 @@ async function foreignFiles(ns) {
 
 	for (var serv of servers) {
 		var files = ns.ls(serv);
-		// var screeps = ns.ls(serv, ".ns");
+		// var screeps = ns.ls(serv, ".js");
 		files = files.filter(
-			file => !ns.ls(serv, ".ns").includes(file) && !ns.ls(serv, "util").includes(file)
+			file => !ns.ls(serv, ".js").includes(file) && !ns.ls(serv, "util").includes(file)
 		);
 		//
 		output.push({"hostname":serv, "files":files});

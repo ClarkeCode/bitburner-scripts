@@ -4,8 +4,8 @@
  */
 export async function setupServer(ns, target, noisy=true) {
     var programs = ns.ls("home", "util");
-	programs.push("intermediate.ns", "wakeup.ns", "bootstrap.ns", "jackercrack.ns",
-    "survey.ns", "goto.ns", "overlord.ns", "webcrawler.ns");
+	programs.push("bootstrap.js", "jackercrack.js",
+    "survey.js", "goto.js", "overlord.js", "webcrawler.js");
     
     var copied = (await ns.scp(programs, "home", target));
     // ns.tprint(copied);

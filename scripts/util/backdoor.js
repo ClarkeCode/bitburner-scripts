@@ -1,4 +1,4 @@
-import { goto } from "goto.ns";
+import { goto } from "goto.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {

@@ -41,26 +41,3 @@ export function formatAction(ns, host, target, action, actionTime=0) {
 	var fstr = actionTime == 0 ? "[%s]->[%s] %s" : "[%s]->[%s] %s in %s";
 	return ns.sprintf(fstr, host, target, action, formatTime(ns, actionTime));
 }
-
-// function amain(ns) {
-// 	var hostname = ns.getHostname();
-//     var target = ns.args[0];
-// 	ns.tail();
-// 	ns.disableLog("ALL");
-// 	var gfactor;
-// 	var oldmoney = fetchCurrentMoney(ns, target);
-// 	do {
-// 		ns.clearLog();
-// 		var exetime = ns.getGrowTime(target)/1000;
-// 		var newmoney = fetchCurrentMoney(ns, target);
-// 		if (gfactor != undefined)
-// 		ns.print(ns.sprintf("Lastgrowth: (%.2f%%) $%.0f", ratioToPercent(gfactor),
-// 		(newmoney-oldmoney)));
-// 		ns.print(ns.sprintf("[%s]->%s Next growth in %d:%.2fs", hostname, target, exetime/60, exetime%60));
-
-// 	}
-// 	while ((gfactor = await ns.grow(target)) > 1.01);//Grow until growth rate is < 1%
-
-// 	ns.clearLog();
-// 	ns.tprintf("[%s] Completed flowerpot script on target '%s'", hostname, target);
-// }

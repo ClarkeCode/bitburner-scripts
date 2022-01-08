@@ -1,5 +1,3 @@
-import { performGrow } from "/util/util.ns";
-
 /** @param {NS} ns
  *  Arguments are 'target', 'threads'
  *  **/

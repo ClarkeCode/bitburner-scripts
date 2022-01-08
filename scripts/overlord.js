@@ -1,6 +1,6 @@
-import { threadsToHackUntilPercent, threadsToRefillServer, threadsToMinSecurity, performHack} from "/util/util.ns";
-import { formatMoney } from "/util/format.ns";
-import { allServers } from "./survey.ns";
+import { threadsToHackUntilPercent, threadsToRefillServer, threadsToMinSecurity, performHack} from "/util/util.js";
+import { formatMoney } from "/util/format.js";
+import { allServers } from "./survey.js";
 
 
 /** @param {NS} ns **/
@@ -16,10 +16,23 @@ export async function main(ns) {
 
 	var servers = (await allServers(ns)).filter(serv => ns.hasRootAccess(serv.hostname)).map(serv => serv.hostname).reverse();
 	// ns.tprint(servers);
+	const freeMoney = (target) => {
+		var minMoney = ns.getServerMaxMoney(target) * desiredPercentageToHack;
+		if (ns.getServerMoneyAvailable(target) <= minMoney) return 0;
+		return ns.getServerMoneyAvailable(target) - minMoney; 
+	}
 
-	const leech     = {"name": "/util/leech.ns",     "desiredThreads": (target)=>{return threadsToHackUntilPercent(ns, target, desiredPercentageToHack)}, "timer": (target)=>{return ns.getHackTime(target)+additionalUpdateTime}};
-	const crippler  = {"name": "/util/crippler.ns",  "desiredThreads": (target)=>{return threadsToMinSecurity(ns, target)}, "timer": (target)=>{return ns.getWeakenTime(target)+additionalUpdateTime}};
-	const flowerpot = {"name": "/util/flowerpot.ns", "desiredThreads": (target)=>{return threadsToRefillServer(ns, target)}, "timer": (target)=>{return ns.getGrowTime(target)+additionalUpdateTime}};
+	const leech     = {"name": "/util/leech.js",     
+		"desiredThreads": (target)=>{
+			// if (freeMoney(target) != 0) ns.print("Free$: " + formatMoney(ns, freeMoney(target)));
+			return Math.floor(ns.hackAnalyzeThreads(target, 
+				freeMoney(target)
+			))
+		}, //(target)=>{return threadsToHackUntilPercent(ns, target, desiredPercentageToHack)}, 
+		"timer": (target)=>{return ns.getHackTime(target)+additionalUpdateTime}
+	};
+	const crippler  = {"name": "/util/crippler.js",  "desiredThreads": (target)=>{return threadsToMinSecurity(ns, target)}, "timer": (target)=>{return ns.getWeakenTime(target)+additionalUpdateTime}};
+	const flowerpot = {"name": "/util/flowerpot.js", "desiredThreads": (target)=>{return threadsToRefillServer(ns, target)}, "timer": (target)=>{return ns.getGrowTime(target)+additionalUpdateTime}};
 
 	//Math.floor(ns.hackAnalyzeThreads(targetHost,targetServer.moneyMax * 5e-1))
 
@@ -43,7 +56,7 @@ export async function main(ns) {
 	var route = (target, scriptInfo) => {
 		var dthreads = scriptInfo.desiredThreads(target); //desired
 		var othreads = scriptInfo.desiredThreads(target); //original
-		if (othreads == 0) return 0;
+		if (othreads <= 0) return 0;
 
 		for (var serv of servers) {
 			var availibleThreads = clampToMemoryConstraints(serv, scriptInfo.name, dthreads);

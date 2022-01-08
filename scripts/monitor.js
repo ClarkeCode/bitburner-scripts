@@ -1,4 +1,4 @@
-import { formatMoney } from "/util/format.ns";
+import { formatMoney } from "/util/format.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
