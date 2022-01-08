@@ -9,21 +9,21 @@ function exploits(ns) { return [
 /** Attempts to buy any missing exploits from the dark web
  * @param {NS} ns
  */
-function buyMissingPrograms(ns) {
-	try {
-		if (!ns.getPlayer().tor) ns.purchaseTor();
-		for (var ex of exploits(ns).filter(ex => !ns.fileExists(ex.name, "home"))) {
-			ns.purchaseProgram(ex.name);
-		}
-	} catch {}
-}
+// function buyMissingPrograms(ns) {
+// 	try {
+// 		if (!ns.getPlayer().tor) ns.purchaseTor();
+// 		for (var ex of exploits(ns).filter(ex => !ns.fileExists(ex.name, "home"))) {
+// 			ns.purchaseProgram(ex.name);
+// 		}
+// 	} catch {}
+// }
 
 /** Number of ports you can curently open
  * @param {NS} ns 
  * @return {number}
  * **/
 function crackLevel(ns) {
-	buyMissingPrograms(ns);
+	// buyMissingPrograms(ns);
 	return exploits(ns).map(ex => ns.fileExists(ex.name, "home")).reduce((a, b) => a+b);
 }
 
