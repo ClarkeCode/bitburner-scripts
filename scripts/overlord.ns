@@ -2,44 +2,6 @@ import { threadsToHackUntilPercent, threadsToRefillServer, threadsToMinSecurity,
 import { formatMoney } from "/util/format.ns";
 import { allServers } from "./survey.ns";
 
-/** Attempt to execute a given script & threadcount across the provided array of servers
- * @param {NS} ns
- * @param {Array.<string>} botnetArr
- * @param {string} target
- * @param {string} script Name of the script that should be dispatched
- * @param {number} desiredThreads
- * @param {boolean} noisy Should the function print to the logs
- **/
-function scriptRouter(ns, botnetArr, target, script, desiredThreads, noisy=false) {
-	var scriptCost = ns.getScriptRam(script);
-	var requestedThreads = desiredThreads;
-	var createdPids = [];
-
-	// if (noisy) {ns.print(ns.sprintf("%s:", script));}
-	for (var serv of botnetArr) {
-		var availableThreads = Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/scriptCost);
-		if (availableThreads < 1) continue; //Server is busy
-		if (requestedThreads < 1) break; //Job is done
-
-		var threadsToExec = 0;
-		{
-			if (availableThreads > requestedThreads) { threadsToExec = requestedThreads; requestedThreads = 0; }
-			else { threadsToExec = availableThreads; requestedThreads -= availableThreads; }
-		}
-
-		if (threadsToExec != 0) {
-			var pid = ns.exec(script, serv, threadsToExec, target);
-			createdPids.push(pid);
-			if (noisy && pid != 0) {ns.print(ns.sprintf("- %-18s x%-3d [%s]", script, threadsToExec, serv));}
-		}
-	}
-	
-	return { success: requestedThreads <= 0, pids: createdPids };
-}
-
-const leech     = "/util/leech.ns";
-const crippler  = "/util/crippler.ns";
-const flowerpot = "/util/flowerpot.ns";
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -47,20 +9,25 @@ export async function main(ns) {
 	ns.disableLog("ALL");
 	var host = ns.getHostname();
 	var target = ns.args[0];
-	// ns.print(target);
-
-	var lastPrinted = undefined;
+	
 	var noisy = true;
-	var desiredPercentageToHack = 0.65;
+	var desiredPercentageToHack = 0.5;
 	var additionalUpdateTime = 500;
-	var cores = ns.getServer().cpuCores;
 
-	var printTarget = () => {
-		// ns.print(target);
-		ns.print(ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
+	var servers = (await allServers(ns)).filter(serv => ns.hasRootAccess(serv.hostname)).map(serv => serv.hostname).reverse();
+	// ns.tprint(servers);
+
+	const leech     = {"name": "/util/leech.ns",     "desiredThreads": (target)=>{return threadsToHackUntilPercent(ns, target, desiredPercentageToHack)}, "timer": (target)=>{return ns.getHackTime(target)+additionalUpdateTime}};
+	const crippler  = {"name": "/util/crippler.ns",  "desiredThreads": (target)=>{return threadsToMinSecurity(ns, target)}, "timer": (target)=>{return ns.getWeakenTime(target)+additionalUpdateTime}};
+	const flowerpot = {"name": "/util/flowerpot.ns", "desiredThreads": (target)=>{return threadsToRefillServer(ns, target)}, "timer": (target)=>{return ns.getGrowTime(target)+additionalUpdateTime}};
+
+	//Math.floor(ns.hackAnalyzeThreads(targetHost,targetServer.moneyMax * 5e-1))
+
+	var targetString = () => {
+		return ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
 			formatMoney(ns, ns.getServerMoneyAvailable(target)), formatMoney(ns, ns.getServerMaxMoney(target)),
 			ns.getServerSecurityLevel(target), ns.getServerMinSecurityLevel(target)
-		));
+		);
 	}
 
 	var runProg = (script, threads) => {
@@ -68,90 +35,46 @@ export async function main(ns) {
 		ns.print(ns.sprintf("- %-18s x%-3d [%s]", script, threads, ns.getHostname()));
 	}
 
-	var clampToMemoryConstraints = (script, desiredThreads) => {
-		var possibleThreads = Math.floor((ns.getServerMaxRam(host)-ns.getServerUsedRam(host))/ns.getScriptRam(script));
+	var clampToMemoryConstraints = (serv, script, desiredThreads) => {
+		var possibleThreads = Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/ns.getScriptRam(script));
 		return Math.min(possibleThreads, desiredThreads);
 	}
 
-	while (true) {
-		var wthreads = clampToMemoryConstraints(crippler, threadsToMinSecurity(ns, target, cores));
-		var gthreads = clampToMemoryConstraints(flowerpot, threadsToRefillServer(ns, target, cores));
+	var route = (target, scriptInfo) => {
+		var dthreads = scriptInfo.desiredThreads(target); //desired
+		var othreads = scriptInfo.desiredThreads(target); //original
+		if (othreads == 0) return 0;
 
-		if (wthreads > 0) {
-			printTarget(target);
-			runProg(crippler, wthreads);
-			await ns.sleep(ns.getWeakenTime(target)+additionalUpdateTime);
-		}
-
-		if (gthreads > 0) {
-			printTarget(target);
-			runProg(flowerpot, gthreads);
-			await ns.sleep(ns.getGrowTime(target)+additionalUpdateTime);
-		}
-		
-		var hthreads = clampToMemoryConstraints(leech, threadsToHackUntilPercent(ns, target, desiredPercentageToHack));
-		if (hthreads > 0) {
-			printTarget(target);
-			runProg(leech, hthreads);
-			await ns.sleep(ns.getHackTime(target)+additionalUpdateTime);
-		}
-
-		await ns.sleep(100);
-	}
-}
-
-/** @param {NS} ns **/
-export async function main2(ns) {
-	ns.tail();
-	ns.disableLog("ALL");
-
-	
-	var target = ns.args[0];
-	var botnet = (await allServers(ns)).filter(serv => (serv.requiredHackingSkill <= ns.getHackingLevel()) ).map(serv => serv.hostname);
-	// ns.getServer().requiredHackingSkill
-
-	var createdPids = [];
-	
-	// var lastHack = ns.getTimeSinceLastAug();
-	var lastWeak = ns.getTimeSinceLastAug();
-	// var lastGrow = ns.getTimeSinceLastAug();
-
-	var lastPrinted = undefined;
-	var noisy = true;
-	var desiredPercentageToHack = 0.65;
-	
-
-	while (true) {
-		var time = ns.getTimeSinceLastAug();
-
-		if (threadsToMinSecurity(ns, target) > 10 /*&& time >= lastWeak*/) {
-			var report = scriptRouter(ns, botnet, target, crippler, threadsToMinSecurity(ns, target), noisy);
-			if (report.success) { //Able to dispatch all necessary weakening
-				lastWeak = ns.getTimeSinceLastAug() + ns.getWeakenTime(target) + 1000;
+		for (var serv of servers) {
+			var availibleThreads = clampToMemoryConstraints(serv, scriptInfo.name, dthreads);
+			dthreads -= availibleThreads;
+			
+			if (availibleThreads > 0) {
+				ns.exec(scriptInfo.name, serv, availibleThreads, target);
+				ns.print(ns.sprintf("- %-18s x%-3d [%s]", scriptInfo.name, availibleThreads, serv));
 			}
+			if (dthreads <= 0) { break; }
 		}
-		scriptRouter(ns, botnet, target, flowerpot, threadsToRefillServer(ns, target)+1, noisy);
+		return othreads - dthreads;
+	}
 
-		var moneyPercent = (ns.getServerMoneyAvailable(target) / ns.getServerMaxMoney(target))
-		if (moneyPercent >= 0.95) {
-			// await performHack(ns, target, threadsToHackUntilPercent(ns, target, desiredPercentageToHack));
-			var hthread = threadsToHackUntilPercent(ns, target, desiredPercentageToHack);
-			ns.run(leech, hthread, target, hthread);
-			ns.print(ns.sprintf("- %-18s x%-3d [%s]", leech, hthread, ns.getHostname()));
-			await ns.sleep(ns.getHackTime(target));
+	var lastWeak = ns.getTimeSinceLastAug();
+	var lastGrow = ns.getTimeSinceLastAug();
+	var lastHack = ns.getTimeSinceLastAug();
+	var lastPrint = targetString();
+	ns.print(lastPrint);
+	while (true) {
+		if (ns.getTimeSinceLastAug() > lastWeak && route(target, crippler) != 0) { lastWeak = ns.getTimeSinceLastAug() + crippler.timer(target); }
+		if (ns.getTimeSinceLastAug() > lastGrow && route(target, flowerpot) != 0) { lastGrow = ns.getTimeSinceLastAug() + flowerpot.timer(target); }
+		if (ns.getTimeSinceLastAug() > lastHack && route(target, leech) != 0) {
+			lastHack = ns.getTimeSinceLastAug() + leech.timer(target);
 		}
-		// ns.tprint(remainingHackablePercentage);
-		// scriptRouter(ns, botnet, target, leech, threadsToHackUntilPercent(ns, target, remainingHackablePercentage), noisy);
-
-		var line = ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
-			formatMoney(ns, ns.getServerMoneyAvailable(target)), formatMoney(ns, ns.getServerMaxMoney(target)),
-			ns.getServerSecurityLevel(target), ns.getServerMinSecurityLevel(target)
-		);
 		
-		if (lastPrinted != line) {
-			lastPrinted = line;
-			ns.print(lastPrinted);
+		if (lastPrint != targetString()) {
+			lastPrint = targetString();
+			ns.print(lastPrint);
 		}
-		await ns.sleep(1050);
+
+		await ns.sleep(500);
 	}
 }
