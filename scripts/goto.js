@@ -1,4 +1,4 @@
-import { findLinksToServer } from "/util/find.ns";
+import { findLinksToServer } from "/util/find.js";
 
 /** @param {NS} ns **/
 export async function goto(ns, host, target) {
