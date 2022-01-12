@@ -1,5 +1,6 @@
 import { formatMoney } from "/util/format.js";
 
+/** @param {NS} ns **/
 export function largestPurchasableServer(ns) {
 	var money = ns.getPlayer().money;
 	var gigs = 2**20;
@@ -9,22 +10,23 @@ export function largestPurchasableServer(ns) {
 
 /** @param {NS} ns **/
 export async function main(ns) {
-    var hostname = ns.args[0];
-    var desiredRAM = ns.args[1];
-    if (desiredRAM == undefined) {
-        desiredRAM = largestPurchasableServer(ns);
+    const settings = ns.flags([
+        ["upgrade", false]
+    ]);
+
+    const desiredRAM = largestPurchasableServer(ns);
+    const hostname = settings._[0];
+
+    if (hostname == undefined) {
+        ns.tprintf("WARNING - Largest purchasable server is %d Gb at $%s%s%s", desiredRAM, 
+            formatMoney(ns, ns.getPurchasedServerCost(desiredRAM)),
+            desiredRAM == 2**20 ? "" : ". Next size at $",
+            desiredRAM == 2**20 ? "" : formatMoney(ns, ns.getPurchasedServerCost(desiredRAM*2)));
+        return;
     }
-    else if (desiredRAM % 2 != 0) {ns.tprint("ERROR: Server memory must be factorable by 2"); return; }
-    var doPurchase = await ns.prompt(ns.sprintf("Do you want to by a server '%s' with %d GB of RAM?\n\
-    Will cost %s, next size at %s", hostname, desiredRAM,
-    formatMoney(ns, ns.getPurchasedServerCost(desiredRAM)), formatMoney(ns, ns.getPurchasedServerCost(desiredRAM*2))));
-    
-    if (doPurchase) {
-        ns.tprint(ns.purchaseServer(hostname, desiredRAM));
-        ns.tprint("INFO - Purchased " + hostname);
-        ns.spawn("/util/setup-server.js", 1, hostname);
-    }
-    else {
-        ns.tprint("INFO - Declined purchase");
-    }
+
+    if (settings.upgrade) { ns.deleteServer(hostname); }
+    ns.purchaseServer(hostname, desiredRAM);
+    ns.tprintf("INFO - Purchased '%s' of size %d Gb for $%s", hostname, desiredRAM, formatMoney(ns, ns.getPurchasedServerCost(desiredRAM)));
+    ns.spawn("/util/setup-server.js", 1, hostname);
 }
