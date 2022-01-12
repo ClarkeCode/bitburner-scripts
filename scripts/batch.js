@@ -1,22 +1,24 @@
 import { formatMoney } from "/util/format.js";
-/** 
- * @param {NS} ns 
- * @param {String} name
- * @param {Function} timingFunc
- * */
-function genScript(ns, name, timingFunc) {
-	return {
-		"name": name,
-		"cost": ns.getScriptRam(name),
-		"timer": timingFunc,
-		"availableThreads": (serv) => { return Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/ns.getScriptRam(name)); }
-	};
+
+class Script {
+	/** @param {NS} ns @param {String} scriptName **/
+	constructor (ns, scriptName, timerFunc=(target)=>{return 0}) {
+		this.name = scriptName;
+		this.cost = ns.getScriptRam(scriptName);
+		this.timer = timerFunc;
+		this.availableThreads = (serv) => { return Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/ns.getScriptRam(name)); }
+	}
 }
 
-/**
- * @param {NS} ns
- * @param {String} target Hostname of target server
- * */
+/** @param {NS} ns @param {Script} script @param {number} threads @param {any[]} args 
+ * @return {Array<number>} The pid numbers of the dispatched processes */
+function dispatchScript(ns, script, threads=1, ...args) {
+	let pids = [];
+	pids.push(ns.run(script.name, threads, ...args));
+	return pids;
+}
+
+/** @param {NS} ns  @param {String} target Hostname of target server */
 function targetString(ns, target) {
 	return ns.sprintf("[%s]->[%s] %s/%s (%.2f/%d)", ns.getHostname(), target,
 		formatMoney(ns, ns.getServerMoneyAvailable(target)), formatMoney(ns, ns.getServerMaxMoney(target)),
@@ -31,7 +33,7 @@ async function prepareServerForBatching(ns, target, crippler, flowerpot, timeOff
 		ns.print("Weakening to null");
 		const desiredThreads = Math.ceil((ns.getServerSecurityLevel(target)-ns.getServerMinSecurityLevel(target))/0.05);
 		const clamped = Math.min(crippler.availableThreads("home"), desiredThreads);
-		if (clamped > 0) ns.run(crippler.name, clamped, target);
+		if (clamped > 0) dispatchScript(ns, crippler, clamped, target);
 		await ns.sleep(crippler.timer(target)+timeOffset);
 	}
 
@@ -40,9 +42,9 @@ async function prepareServerForBatching(ns, target, crippler, flowerpot, timeOff
 		ns.print("Filling up money");
 		const desiredThreads = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target)/ns.getServerMoneyAvailable(target)));
 		const clamped = Math.min(flowerpot.availableThreads("home"), desiredThreads);
-		if (clamped > 0) ns.run(flowerpot.name, clamped, target);
+		if (clamped > 0) dispatchScript(ns, flowerpot, clamped, target);
 		await ns.sleep(flowerpot.timer(target)+timeOffset);
-		ns.run(crippler.name, Math.ceil(ns.growthAnalyzeSecurity(clamped)/0.05), target);
+		dispatchScript(ns, crippler, Math.ceil(ns.growthAnalyzeSecurity(clamped)/0.05), target);
 		await ns.sleep(crippler.timer(target)+timeOffset);
 	}
 }
@@ -56,10 +58,10 @@ export async function main(ns) {
 	const target = settings._[0];
 	const debug = settings.debug;
 
-	const timeOffset = 500;
-	const leech     = genScript(ns, "/util/leech.js", ns.getHackTime);
-	const crippler  = genScript(ns, "/util/crippler.js", ns.getWeakenTime);
-	const flowerpot = genScript(ns, "/util/flowerpot.js", ns.getGrowTime);
+	const timeOffset = 250;
+	const leech     = new Script(ns, "/util/leech.js",     ns.getHackTime);
+	const crippler  = new Script(ns, "/util/crippler.js",  ns.getWeakenTime);
+	const flowerpot = new Script(ns, "/util/flowerpot.js", ns.getGrowTime);
 
 	if (!ns.serverExists(target)) { ns.tprintf("ERROR - '%s' is not a valid target", target); return; }
 	ns.tail();
@@ -111,10 +113,10 @@ export async function main(ns) {
 		const p4delay = 2 * timeOffset;
 
 		ns.print(ns.sprintf("Batch ready %s", batch.totalRamCost));
-		const pid1 = ns.run(leech.name,     batch.phaseA, target, "--delay", p1delay);
-		const pid2 = ns.run(crippler.name,  batch.phaseB, target, "--delay", 0);
-		const pid3 = ns.run(flowerpot.name, batch.phaseC, target, "--delay", p3delay);
-		const pid4 = ns.run(crippler.name,  batch.phaseD, target, "--delay", p4delay);
+		const pid1 = dispatchScript(ns, leech,     batch.phaseA, target, "--delay", p1delay);
+		const pid2 = dispatchScript(ns, crippler,  batch.phaseB, target, "--delay", 0);
+		const pid3 = dispatchScript(ns, flowerpot, batch.phaseC, target, "--delay", p3delay);
+		const pid4 = dispatchScript(ns, crippler,  batch.phaseD, target, "--delay", p4delay);
 		if (pid3 == 0) { ns.kill(pid1); ns.kill(pid2); ns.kill(pid4); ns.print("ERROR: Too big"); return;}
 
 		await ns.sleep(ns.getWeakenTime(target) - 2*timeOffset);
