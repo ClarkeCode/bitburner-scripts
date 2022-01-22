@@ -37,21 +37,31 @@ export async function main(ns) {
 	workAquiresFocus = ns.args.includes("focus");
 	// await workUntilHighest(ns, "CyberSec");
 	// await workUntilHighest(ns, "Tian Di Hui");
-	await workUntilHighest(ns, "Volhaven");
+	// await workUntilHighest(ns, "Volhaven");
 	// await workUntilRep(ns, "Chongqing", 37500);
 	// await workUntilRep(ns, "Ishima", 7500);
 	// await workUntilRep(ns, "Chongqing", 6250);
 	// await workUntilRep(ns, "New Tokyo", 6250);
 	// await workUntilRep(ns, "NiteSec", 50000);
-	// await workUntilRep(ns, "The Black Hand", 50000);
 	// await workUntilHighest(ns, "NiteSec");
 	// await workUntilHighest(ns, "The Black Hand");
+
+	// await workUntilRep(ns, "Chongqing", 37500);
+	// await workUntilHighest(ns, "Tian Di Hui");
+	// await workUntilHighest(ns, "NiteSec");
+	// await workUntilHighest(ns, "The Black Hand");
+	// await workUntilRep(ns, "NiteSec", 50000);
+
+	await workUntilRep(ns, "The Black Hand", 100000);
 	await workUntilHighest(ns, "BitRunners");
+
+
 	// while (!ns.joinFaction("Daedalus")) {
 	// 	ns.print("Waiting for Daedalus");
 	// 	await ns.sleep(10000);
 	// }
+	// await workUntilHighest(ns, "Daedalus");
+	// // ns.workForFaction("Daedalus", "Hacking Contracts", true);
 
-	// ns.workForFaction("Daedalus", "Hacking Contracts", true);
 	
 }

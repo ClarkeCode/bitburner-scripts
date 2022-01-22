@@ -1,4 +1,4 @@
-import {formatMoney} from "/util/format.js";
+import {formatMoney, formatTime} from "/util/format.js";
 
 /** @param {NS} ns **/
 
@@ -13,17 +13,22 @@ export async function main(ns) {
     // ns.print(ns.formulas.hacking);
 
 
-    var output = ns.sprintf("[%s]\n%s / %s RAM: %.2f\n",
-        target,
+    var output = ns.sprintf("[%s] (%s) Backdoor: %s\n", 
+        target, ns.getServerRequiredHackingLevel(target), ns.getServer(target).backdoorInstalled ? "YES" : "NO"
+    ); //Comment to lower by 2GB
+    output += ns.sprintf("%s / %s RAM: %.2f\n",
         formatMoney(ns, ns.getServerMoneyAvailable(target)),
         formatMoney(ns, ns.getServerMaxMoney(target)),
         ns.getServerMaxRam(target)
     );
-    output += ns.sprintf("Backdoor: %s\n", ns.getServer(target).backdoorInstalled ? "YES" : "NO"); //Comment to lower by 2GB
-    output += ns.sprintf("Requires Hacking LVL: %d\nSecurity: %.2f (Min %d)",
-        ns.getServerRequiredHackingLevel(target),
+    output += ns.sprintf("Security: %.2f (Min %d)\n",
         ns.getServerSecurityLevel(target),
         ns.getServerMinSecurityLevel(target)
+    );
+    output += ns.sprintf("H: %s, G: %s, W: %s",
+        formatTime(ns, ns.getHackTime(target)),
+        formatTime(ns, ns.getGrowTime(target)),
+        formatTime(ns, ns.getWeakenTime(target))
     );
     
     if (ns.args.includes("scan")) {

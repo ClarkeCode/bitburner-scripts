@@ -20,12 +20,13 @@ function twoDigit(ns, val) {
 }
 //Return string, time in seconds
 /**
- * Returns formatted string of the time (provided in seconds)
+ * Returns formatted string of the time (provided in mili-seconds)
  */
-export function formatTime(ns, timeval) {
-	var hours   = Math.floor(timeval/(60**2));
-	var minutes = Math.floor((timeval-(hours*60**2))/60);
-	var seconds = timeval - hours*60**2 - minutes*60;
+export function formatTime(ns, time) {
+	let timeval = time/1000;
+	let hours   = Math.floor(timeval/(60**2));
+	let minutes = Math.floor((timeval-(hours*60**2))/60);
+	let seconds = timeval - hours*60**2 - minutes*60;
 
 	if (timeval < 60) {
 		return ns.sprintf("%2.2fs", seconds);
