@@ -1,3 +1,4 @@
+/** @param {NS} ns **/
 function exploits(ns) { return [
 	{"name": "BruteSSH.exe",  "function": ns.brutessh},
 	{"name": "FTPCrack.exe",  "function": ns.ftpcrack},
@@ -6,24 +7,12 @@ function exploits(ns) { return [
 	{"name": "SQLInject.exe", "function": ns.sqlinject}
 	]
 };
-/** Attempts to buy any missing exploits from the dark web
- * @param {NS} ns
- */
-// function buyMissingPrograms(ns) {
-// 	try {
-// 		if (!ns.getPlayer().tor) ns.purchaseTor();
-// 		for (var ex of exploits(ns).filter(ex => !ns.fileExists(ex.name, "home"))) {
-// 			ns.purchaseProgram(ex.name);
-// 		}
-// 	} catch {}
-// }
 
 /** Number of ports you can curently open
  * @param {NS} ns 
  * @return {number}
  * **/
 function crackLevel(ns) {
-	// buyMissingPrograms(ns);
 	return exploits(ns).map(ex => ns.fileExists(ex.name, "home")).reduce((a, b) => a+b);
 }
 
@@ -42,9 +31,8 @@ function defuse(ns, target) {
  * @param {string} target Hostname of server
  */
 export function crack(ns, target) {
-
-	var servPorts = ns.getServerNumPortsRequired(target);
-	var canNuke = crackLevel(ns) >= servPorts;
+	const servPorts = ns.getServerNumPortsRequired(target);
+	const canNuke = crackLevel(ns) >= servPorts;
 	
 	if (canNuke) {
 		defuse(ns, target);
@@ -58,42 +46,19 @@ import { setupServer } from "/util/setup-server.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	ns.tail();
-	while (true) {
-		var servers = (await allServers(ns)).filter(serv => serv.requiredHackingSkill <= ns.getHackingLevel() );
-		for (var serv of servers) {
-			var alreadyCracked = ns.hasRootAccess(serv.hostname);
+	// ns.tail();
+	ns.run("/util/progbutler.js");
+
+	const allServ = await allServers(ns);
+	while (allServ.map(serv => ns.hasRootAccess(serv.hostname)).includes(false)) {
+		const servers = allServ.filter(serv => serv.requiredHackingSkill <= ns.getHackingLevel());
+		for (const serv of servers) {
+			const alreadyCracked = ns.hasRootAccess(serv.hostname);
 			if (crack(ns, serv.hostname)) {
 				await setupServer(ns, serv.hostname, !alreadyCracked);
 			}
 		}
-		await ns.sleep(60 * 1000);
+		await ns.sleep(20 * 1000);
 	}
-}
-
-/** @param {NS} ns **/
-export async function main2(ns) {
-	if (ns.args[0] == undefined || !ns.serverExists(ns.args[0])) {
-		ns.tprint("ERROR: '"+ns.args[0]+"' is not a valid server");
-		return;
-	}
-	var target = ns.args[0];
-
-	// ns.tprint(crackLevel(ns));
-	// ns.tail();
-    // ns.run("/util/crack.js", 1, target);
-	var isCracked = crack(ns, target);
-	
-	if (isCracked) {
-		ns.run("/util/setup-server.js", 1, target);
-		await ns.sleep(200);
-
-		if (ns.args.includes("bd")) ns.spawn("/util/backdoor.js", 1, target);
-
-		// try { await ns.installBackdoor(); } catch(err) {}
-	}
-	else {
-		ns.tprintf("ERROR: Cannot nuke '%s', need more programs, current crack level: %d", target, crackLevel(ns));
-	}
-	// ns.run("councilor.js", 1, target);
+	ns.toast("Jackercrack has cracked all existing servers", "success", 10000);
 }
