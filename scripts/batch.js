@@ -6,7 +6,7 @@ class Script {
 		this.name = scriptName;
 		this.cost = ns.getScriptRam(scriptName);
 		this.timer = timerFunc;
-		this.availableThreads = (serv) => { return Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/ns.getScriptRam(name)); }
+		this.availableThreads = (serv) => { return Math.floor((ns.getServerMaxRam(serv)-ns.getServerUsedRam(serv))/ns.getScriptRam(scriptName)); }
 	}
 }
 
@@ -14,7 +14,7 @@ class Script {
  * @return {Array<number>} The pid numbers of the dispatched processes */
 function dispatchScript(ns, script, threads=1, ...args) {
 	let pids = [];
-	pids.push(ns.run(script.name, threads, ...args));
+	if (threads > 0) pids.push(ns.run(script.name, threads, ...args));
 	return pids;
 }
 
@@ -26,13 +26,35 @@ function targetString(ns, target) {
 	);
 }
 
+/** @param {NS} ns @param {String} target, @param {number} targetCurrentMoney */
+function threadsForSecNeutralGrow(ns, target, targetCurrentMoney) {
+	const growThreads = Math.ceil(ns.growthAnalyze(target, 2.1,//ns.getServerMaxMoney(target)/targetCurrentMoney, 
+		ns.getServer(target).cpuCores));
+	const weakThreads = Math.ceil(ns.growthAnalyzeSecurity(growThreads) / 0.05);
+	return {"growThreads": growThreads, "weakenThreads": weakThreads};
+}
+
+/** @param {NS} ns @param {String} target, @param {number} freeMoney The amount of money which is safe to hack */
+function threadsForSecNeutralHack(ns, target, freeMoney) {
+	const hackThreads = Math.floor(ns.hackAnalyzeThreads(target, freeMoney));
+	const weakThreads = Math.ceil(ns.hackAnalyzeSecurity(hackThreads)/0.5);
+	return {"hackThreads": hackThreads, "weakenThreads": weakThreads};
+}
+
+/** @param {NS} ns @param {number} securityToDisperse @param {String} target, @param {number} targetCurrentMoney */
+function aaa(ns, securityToDisperse, target, targetCurrentMoney) {
+	const d1 = Math.ceil(securityToDisperse / 0.05);
+	const gg = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target)/targetCurrentMoney, ns.getServer(target).cpuCores));
+	const d2 = Math.ceil(ns.growthAnalyzeSecurity(gg) / 0.05);
+}
+
 /** @param {NS} ns **/
 async function prepareServerForBatching(ns, target, crippler, flowerpot, timeOffset) {
 	while (ns.getServerSecurityLevel(target) != ns.getServerMinSecurityLevel(target)) {
 		ns.print(targetString(ns, target));
 		ns.print("Weakening to null");
 		const desiredThreads = Math.ceil((ns.getServerSecurityLevel(target)-ns.getServerMinSecurityLevel(target))/0.05);
-		const clamped = Math.min(crippler.availableThreads("home"), desiredThreads);
+		const clamped = Math.min(crippler.availableThreads(ns.getHostname()), desiredThreads);
 		if (clamped > 0) dispatchScript(ns, crippler, clamped, target);
 		await ns.sleep(crippler.timer(target)+timeOffset);
 	}
@@ -41,7 +63,8 @@ async function prepareServerForBatching(ns, target, crippler, flowerpot, timeOff
 		ns.print(targetString(ns, target));
 		ns.print("Filling up money");
 		const desiredThreads = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target)/ns.getServerMoneyAvailable(target)));
-		const clamped = Math.min(flowerpot.availableThreads("home"), desiredThreads);
+		const clamped = Math.min(flowerpot.availableThreads(ns.getHostname()), desiredThreads);
+		ns.print(clamped);
 		if (clamped > 0) dispatchScript(ns, flowerpot, clamped, target);
 		await ns.sleep(flowerpot.timer(target)+timeOffset);
 		dispatchScript(ns, crippler, Math.ceil(ns.growthAnalyzeSecurity(clamped)/0.05), target);
@@ -55,6 +78,7 @@ export async function main(ns) {
 		["debug", false],
 		["prepare", false]
 	]);
+	const host = ns.getHostname();
 	const target = settings._[0];
 	const debug = settings.debug;
 
@@ -73,19 +97,16 @@ export async function main(ns) {
 
 	ns.print("INFO - Ready...");
 
-	const calcBatch = (target, desiredLeechThreads) => {
-		const w1t = Math.ceil(ns.hackAnalyzeSecurity(desiredLeechThreads)/0.05);
-		const expectedHackMoney = ns.getServerMoneyAvailable(target) * ns.hackAnalyze(target) * desiredLeechThreads;
-		const gt = Math.ceil(
-			ns.growthAnalyze(target, ns.getServerMaxMoney(target)/(ns.getServerMoneyAvailable(target)-expectedHackMoney))
-		);
-		const w2t = Math.ceil(ns.growthAnalyzeSecurity(gt)/0.05);
+	const calcBatch = (target, freeMoney) => {
+		const ab = threadsForSecNeutralHack(ns, target, freeMoney);
+		const cd = threadsForSecNeutralGrow(ns, target, ns.getServerMaxMoney(target)-freeMoney);
+		
 		return {
-			"phaseA": desiredLeechThreads+0,
-			"phaseB": w1t,
-			"phaseC": gt,
-			"phaseD": w2t,
-			"totalRamCost": leech.cost * desiredLeechThreads + crippler.cost * (w1t + w2t) + flowerpot.cost * gt
+			"phaseA": ab.hackThreads,
+			"phaseB": ab.weakenThreads,
+			"phaseC": cd.growThreads,
+			"phaseD": cd.weakenThreads,
+			"totalRamCost": leech.cost * ab.hackThreads + crippler.cost * (ab.weakenThreads + cd.weakenThreads) + flowerpot.cost * cd.growThreads
 		};
 	}
 
@@ -100,13 +121,24 @@ export async function main(ns) {
 	}
 	
 	while (true) {
-		const desiredHackThreads = Math.floor(ns.hackAnalyzeThreads(target, freeMoney(target)));
-		const batch = calcBatch(target, desiredHackThreads);
+		const availableRam = ns.getServerMaxRam(host)-ns.getServerUsedRam(host);
+		let hackMoney = freeMoney(target);
+
+		let batch = calcBatch(target, hackMoney);
+		ns.print(availableRam);
+		while (batch.totalRamCost > availableRam) {
+			ns.print(batch);
+			hackMoney *= 8/9;
+			batch = calcBatch(target, hackMoney);
+		}
+		ns.print(batch);
+		
 
 		// if (batch.totalRamCost >= ns.getServerMaxRam(target)-ns.getServerUsedRam(target)) {
 		// 	ns.print(ns.sprintf("ERROR: not enough memory to run batch - requires %f GB", batch.totalRamCost));
 		// 	return;
 		// }
+
 
 		const p1delay = ns.getWeakenTime(target) - (ns.getHackTime(target) + timeOffset);
 		const p3delay = ns.getWeakenTime(target) + timeOffset - ns.getGrowTime(target);
